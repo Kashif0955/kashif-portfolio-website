@@ -1,12 +1,12 @@
 "use client";
-// @flow strict
+
+import { useState } from "react";
 import { isValidEmail } from "@/utils/check-email";
 import axios from "axios";
-import { useState } from "react";
 import { TbMailForward } from "react-icons/tb";
 import { toast } from "react-toastify";
 
-function ContactForm() {
+const ContactForm = () => {
   const [error, setError] = useState({ email: false, required: false });
   const [isLoading, setIsLoading] = useState(false);
   const [userInput, setUserInput] = useState({
@@ -17,7 +17,7 @@ function ContactForm() {
 
   const checkRequired = () => {
     if (userInput.email && userInput.message && userInput.name) {
-      setError({ ...error, required: false });
+      setError((prevError) => ({ ...prevError, required: false }));
     }
   };
 
@@ -27,20 +27,20 @@ function ContactForm() {
 
     if (!userInput.email || !userInput.message || !userInput.name) {
       console.log("❌ Required fields missing");
-      setError({ ...error, required: true });
+      setError((prevError) => ({ ...prevError, required: true }));
       return;
     }
 
     try {
       setIsLoading(true);
       console.log("Sending request...");
-      const res = await axios.post(
-        `http://localhost:3000/api/contact`,
-        userInput
-      );
-      console.log("Response:", res.data);
 
+      const res = await axios.post("/api/contact", userInput);
+
+      console.log("Response:", res.data);
       toast.success("Message sent successfully!");
+
+      // Reset the form
       setUserInput({ name: "", email: "", message: "" });
     } catch (error) {
       console.error("API Error:", error);
@@ -48,8 +48,7 @@ function ContactForm() {
     } finally {
       setIsLoading(false);
     }
-};
-
+  };
 
   return (
     <div>
@@ -63,35 +62,40 @@ function ContactForm() {
           }
         </p>
         <div className="mt-6 flex flex-col gap-4">
+          {/* Name Field */}
           <div className="flex flex-col gap-2">
             <label className="text-base">Your Name: </label>
             <input
               className="bg-[#10172d] w-full border rounded-md border-[#353a52] focus:border-[#16f2b3] ring-0 outline-0 transition-all duration-300 px-3 py-2"
               type="text"
               maxLength="100"
-              required={true}
+              required
+              value={userInput.name}
               onChange={(e) =>
-                setUserInput({ ...userInput, name: e.target.value })
+                setUserInput((prev) => ({ ...prev, name: e.target.value }))
               }
               onBlur={checkRequired}
-              value={userInput.name}
             />
           </div>
 
+          {/* Email Field */}
           <div className="flex flex-col gap-2">
             <label className="text-base">Your Email: </label>
             <input
               className="bg-[#10172d] w-full border rounded-md border-[#353a52] focus:border-[#16f2b3] ring-0 outline-0 transition-all duration-300 px-3 py-2"
               type="email"
               maxLength="100"
-              required={true}
+              required
               value={userInput.email}
               onChange={(e) =>
-                setUserInput({ ...userInput, email: e.target.value })
+                setUserInput((prev) => ({ ...prev, email: e.target.value }))
               }
               onBlur={() => {
                 checkRequired();
-                setError({ ...error, email: !isValidEmail(userInput.email) });
+                setError((prevError) => ({
+                  ...prevError,
+                  email: !isValidEmail(userInput.email),
+                }));
               }}
             />
             {error.email && (
@@ -101,24 +105,26 @@ function ContactForm() {
             )}
           </div>
 
+          {/* Message Field */}
           <div className="flex flex-col gap-2">
             <label className="text-base">Your Message: </label>
             <textarea
               className="bg-[#10172d] w-full border rounded-md border-[#353a52] focus:border-[#16f2b3] ring-0 outline-0 transition-all duration-300 px-3 py-2"
               maxLength="500"
-              name="message"
-              required={true}
+              required
+              value={userInput.message}
               onChange={(e) =>
-                setUserInput({ ...userInput, message: e.target.value })
+                setUserInput((prev) => ({ ...prev, message: e.target.value }))
               }
               onBlur={checkRequired}
               rows="4"
-              value={userInput.message}
             />
           </div>
+
+          {/* Submit Button */}
           <div className="flex flex-col items-center gap-3">
             {error.required && (
-              <p className="text-sm text-red-400">All fiels are required!</p>
+              <p className="text-sm text-red-400">All fields are required!</p>
             )}
             <button
               className="flex items-center gap-1 hover:gap-3 rounded-full bg-gradient-to-r from-pink-500 to-violet-600 px-5 md:px-12 py-2.5 md:py-3 text-center text-xs md:text-sm font-medium uppercase tracking-wider text-white no-underline transition-all duration-200 ease-out hover:text-white hover:no-underline md:font-semibold"
@@ -140,6 +146,6 @@ function ContactForm() {
       </div>
     </div>
   );
-}
+};
 
 export default ContactForm;
